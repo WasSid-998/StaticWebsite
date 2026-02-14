@@ -1,0 +1,16 @@
+apiVersion: batch/v1
+kind: job
+metadata:
+  name: terraform-job
+spec:
+  backoffLimit: 1
+  template:
+    spec:
+      containers:
+      - name: terraform
+        image: terraform-k8s:latest
+        imagePullPolicy: Never
+        envFrom:
+        - secretRef:
+            name: aws-secret
+      restartPolicy: Never
