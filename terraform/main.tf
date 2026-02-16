@@ -13,6 +13,6 @@ resource "aws_s3_bucket_website_configuration" "website-config" {
 resource "aws_s3_object" "index" {
     bucket = aws_s3_bucket.was-sid-static-website-build-2026.bucket
     key = "index.html"
-    source = "/c/Users/Sidan/Desktop/static-website/index.html"
+    source = "${path.module}/../website/index.html"
     content_type = "text/html"
 }
