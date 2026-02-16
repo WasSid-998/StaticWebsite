@@ -8,7 +8,7 @@ spec:
     spec:
       containers:
         - name: terraform
-          image: terraform-k8s:latest
+          image: sidwas1998/terraform-k8s:latest
           imagePullPolicy: IfNotPresent
           env:
             - name: AWS_ACCESS_KEY_ID
