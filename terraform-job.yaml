@@ -2,14 +2,13 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: terraform-job
-  namespace: default
 spec:
   template:
     spec:
       containers:
         - name: terraform
           image: sidwas1998/terraform-k8s:latest
-          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c", "./run-terraform.sh"]   # run your wrapper
           env:
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
@@ -27,3 +26,4 @@ spec:
                   name: aws-creds
                   key: AWS_DEFAULT_REGION
       restartPolicy: Never
+
