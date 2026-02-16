@@ -1,3 +1,3 @@
 aws_region = "us-east-1"
-bucketname = "was-sid-static-website-build-2026"
+bucketname = "was-sid-static-site-jennkins-2026"
 environment = "prod"
