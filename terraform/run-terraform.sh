@@ -7,4 +7,8 @@ terraform apply -auto-approve
 echo "Terraform applied successfully!"
 
 # Output the website URL (if needed)
-terraform output -raw website_url
+WEBSITE_URL=$(terraform output -raw website_url)
+echo "=============================="
+echo "Website is live at: $WEBSITE_URL"
+echo "=============================="
+
