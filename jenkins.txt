@@ -1,0 +1,82 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = "sidwas1998/terraform-k8s:latest"
+        // Updated path to Job YAML (directly in workspace)
+        K8S_JOB_YAML = "${WORKSPACE}/terraform-job.yaml"
+    }
+
+    stages {
+        stage('Clean Workspace') {
+            steps { cleanWs() }
+        }
+
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/WasSid-998/StaticWebsite.git'
+            }
+        }
+
+        stage('SonarQube Scan') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    sh '/var/jenkins_home/tools/hudson.plugins.sonar.SonarRunnerInstallation/Sonar/bin/sonar-scanner'
+                }
+            }
+        }
+
+        stage('Docker Login') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'docker-cred', 
+                                                      usernameVariable: 'DOCKER_USER', 
+                                                      passwordVariable: 'DOCKER_PASS')]) {
+                        sh 'docker logout || true'
+                        sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                    }
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    sh "docker build -t ${DOCKER_IMAGE} ."
+                }
+            }
+        }
+
+        stage('Push Docker Image to Registry') {
+            steps {
+                script {
+                    sh "docker push ${DOCKER_IMAGE}"
+                }
+            }
+        }
+
+        stage('Deploy Terraform Job') {
+            steps {
+                script {
+                    // Delete old Job if exists
+                    sh "kubectl delete job terraform-job --ignore-not-found"
+
+                    // Apply new Job
+                    sh "kubectl apply -f '${K8S_JOB_YAML}'"
+
+                    // Wait for pod and get logs
+                    sh """
+                        POD=\$(kubectl get pods -l job-name=terraform-job -o jsonpath='{.items[0].metadata.name}')
+                        kubectl wait --for=condition=Ready pod \$POD --timeout=180s || true
+                        kubectl logs \$POD
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        always { echo "Pipeline finished" }
+        failure { echo "Pipeline failed!" }
+    }
+}
